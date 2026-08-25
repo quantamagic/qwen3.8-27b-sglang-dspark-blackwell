@@ -74,7 +74,7 @@ Subsequent starts reuse the Docker image and the named model caches.
 |---|---|
 | Runtime | `ghcr.io/seanyourhighness/vllm-sm12x-nvfp4-dflash2` (digest in `.env.example`; validated local tag `local-v0271-dflash2-capacity-k7-20260824`, image id `sha256:06f0c21d…`) |
 | Target model + revision | [`gittensor-model-hub/Qwen3.8-27B-NVFP4-RTX5090@69274a0`](https://huggingface.co/gittensor-model-hub/Qwen3.8-27B-NVFP4-RTX5090/tree/69274a0d8dff5dd35bcee8290612f71e03b6e981) |
-| Draft model | [`seanyourhighness/Qwen3.8-27B-DFlash2-NVFP4`](https://huggingface.co/seanyourhighness/Qwen3.8-27B-DFlash2-NVFP4) (`model.safetensors` sha256 `db19f849…`) |
+| Draft model | [`YourHighnessLA/Qwen3.8-27B-DFlash2-NVFP4`](https://huggingface.co/YourHighnessLA/Qwen3.8-27B-DFlash2-NVFP4) (`model.safetensors` sha256 `db19f849…`) |
 | vLLM base | [v0.27.1 commit `6e448d0ea`](https://github.com/vllm-project/vllm/commit/6e448d0ea9bf3d88d898b65449ca6dc2aec170ac) |
 | FlashInfer | 0.6.16.post3 (git `9dc1b24`), with [PR #4346](https://github.com/flashinfer-ai/flashinfer/pull/4346) SM120 NVFP4 paged-prefill backport |
 | Overlay | [`0001-v0271-sm12x-dflash2-nvfp4.patch`](0001-v0271-sm12x-dflash2-nvfp4.patch) (51 files, Python-only; `sha256:248adb62…`) |

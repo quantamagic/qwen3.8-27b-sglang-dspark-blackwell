@@ -127,11 +127,21 @@ not redistributed in the runtime image.
 | Serving mode | `--enable-mm-embeds` + zero image/video limits; fused M-RoPE kernel |
 | Triton JIT cache | `/home/vllm/.cache/vllm/triton` (persisted in the named vLLM cache volume) |
 
-Measured on the RTX 5090 (SM120): c1 ≈ 108–151 tok/s, c4 aggregate median
-≈ 349 tok/s (2.31x vs. c1), ~61% draft acceptance at K7, zero restarts,
-zero OOM. See [BENCHMARKS.md](BENCHMARKS.md) for the TLDR of expected 5090
-decode/prefill/vision numbers and [EVIDENCE.md](EVIDENCE.md) for the full
-measurement record.
+Measured on the RTX 5090 (SM120), published `v0.27.1-sm12x-dflash2.3`
+image (3 warm + 5 measured, cache-busted):
+
+| Concurrency | Narrative (tok/s) | Code (tok/s) |
+|---:|---:|---:|
+| c1 | ~98 | ~173 |
+| c2 | ~192 (agg) | ~330 (agg) |
+| c3 | ~278 (agg) | ~447 (agg) |
+| c4 | ~344 (agg) | ~587 (agg) |
+
+Per-lane decode stays flat (~90–97 narrative, ~169–189 code) across c1–c4;
+aggregate scales ~3.5× from c1 → c4 with ~61% draft acceptance at K7, zero
+restarts, zero OOM. See [BENCHMARKS.md](BENCHMARKS.md) for the TLDR of
+expected 5090 decode/prefill/vision numbers and [EVIDENCE.md](EVIDENCE.md)
+for the full measurement record.
 
 ## Why the M-RoPE overlay is required
 

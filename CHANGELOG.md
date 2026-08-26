@@ -1,5 +1,23 @@
 # Changelog — vllm-sm12x-nvfp4-dflash2
 
+## v0.27.1-sm12x-dflash2.2 (2026-08-25)
+
+Text-throughput correction; runtime image and model pins are unchanged.
+
+- Make `--language-model-only` mandatory in `compose.yaml`.
+- Remove `--enable-mm-embeds`, the zero-count multimodal limits, the Compose
+  vision service, and the `start.sh --vision` deployment path.
+- Remove vision-specific status, stop, verify, environment, and release-check
+  behavior. The sidecar source and historical vision benchmark remain in-tree
+  for future development but are not part of the supported deployment.
+- Document the root cause: the embedding-capable Qwen3.5 path disables vLLM's
+  fused QK-norm + RoPE + gate decoder kernel even when no image is active.
+- Same-image A/B: narrative 61.6 -> 116.2 tok/s; code 105.7 -> 202.4 tok/s;
+  GPU allocation about 32,102 -> 30,944 MiB.
+
+Upgrade with `git pull --ff-only`, `docker compose down --remove-orphans`, and
+`./start.sh`.
+
 ## v0.27.1-sm12x-dflash2.1 (2026-08-25)
 
 First public release of the all-NVFP4 DFlash2 stack.

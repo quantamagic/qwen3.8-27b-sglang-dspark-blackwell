@@ -16,14 +16,18 @@ grep -Fq '      - ${MODEL_ID}' compose.yaml || true
 grep -Fq '      - ${MODEL_REVISION}' compose.yaml
 grep -Fq './chat-template.jinja:/opt/vllm-release/chat-template.jinja:ro' compose.yaml
 grep -Fq '      - /opt/vllm-release/chat-template.jinja' compose.yaml
+grep -Fq '      - --language-model-only' compose.yaml
+! grep -Fq -- '--enable-mm-embeds' compose.yaml
+! grep -Fq -- '--limit-mm-per-prompt' compose.yaml
+! grep -Eq '^  vision:' compose.yaml
+! grep -Fq -- '--vision' start.sh
 grep -Fq 'io.github.seanyourhighness.vllm.patch-sha256=' Dockerfile.release-metadata
 grep -Fq 'io.github.seanyourhighness.vllm.draft-model=' Dockerfile.release-metadata
 grep -Fq 'io.github.seanyourhighness.vllm.chat-template-sha256=' Dockerfile.release-metadata
 
 if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
-  # Render both profiles against .env.example (no GPU needed to render).
+  # Render the supported language-only deployment (no GPU needed to render).
   docker compose --env-file .env.example -f compose.yaml config --quiet
-  docker compose --env-file .env.example -f compose.yaml --profile vision config --quiet
 fi
 
 if [[ "${CHECK_PATCH_APPLY:-0}" == "1" ]]; then

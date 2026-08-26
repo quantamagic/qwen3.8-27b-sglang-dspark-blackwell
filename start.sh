@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # start.sh — one-shot launch of the all-NVFP4 DFlash2 release.
 #
-#   ./start.sh              # text-only (server)
-#   ./start.sh --vision     # server + optional CPU vision sidecar
+#   ./start.sh              # optimized text-only server
 #
 # Checks GPU/SM, VRAM, Docker/Compose, disk, and ports; pulls the pinned
 # runtime; downloads the pinned target + draft checkpoints into named
@@ -46,12 +45,8 @@ free_kb="$(df -Pk "$ROOT" | awk 'NR==2 {print $4}')"
 (( free_kb >= 45 * 1024 * 1024 )) || echo "warning: less than 45 GB free; downloads may exhaust disk" >&2
 
 files=(-f compose.yaml)
-mode="text-only"
-if [[ "${1:-}" == "--vision" ]]; then
-  files+=("--profile" "vision")
-  mode="server + CPU vision sidecar"
-elif [[ -n "${1:-}" ]]; then
-  echo "usage: ./start.sh [--vision]" >&2
+if [[ -n "${1:-}" ]]; then
+  echo "usage: ./start.sh" >&2
   exit 2
 fi
 
@@ -88,20 +83,10 @@ deadline=$((SECONDS + START_TIMEOUT_SECONDS))
 echo "Waiting for vLLM (first boot downloads the pinned target checkpoint, ~20.6 GB)..."
 while (( SECONDS < deadline )); do
   if curl -fsS "http://${BIND_ADDRESS}:${VLLM_PORT}/health" >/dev/null 2>&1; then
-    if [[ "$mode" == *vision* ]]; then
-      if curl -fsS "http://${BIND_ADDRESS}:${VISION_PORT}/health" >/dev/null 2>&1; then
-        echo "Services are healthy."
-        ./verify.sh --smoke
-        echo "OpenAI API:  http://${BIND_ADDRESS}:${VLLM_PORT}/v1"
-        echo "Vision proxy: http://${BIND_ADDRESS}:${VISION_PORT}/v1"
-        exit 0
-      fi
-    else
-      echo "Server is healthy."
-      ./verify.sh --smoke
-      echo "OpenAI API: http://${BIND_ADDRESS}:${VLLM_PORT}/v1"
-      exit 0
-    fi
+    echo "Server is healthy."
+    ./verify.sh --smoke
+    echo "OpenAI API: http://${BIND_ADDRESS}:${VLLM_PORT}/v1"
+    exit 0
   fi
   if (( SECONDS % 30 < 10 )); then
     docker compose "${files[@]}" ps --format 'table {{.Service}}\t{{.Status}}' || true

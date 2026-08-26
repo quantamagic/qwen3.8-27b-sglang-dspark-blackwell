@@ -3,15 +3,14 @@
 # Services:
 #   model-cache-init  one-shot: fix ownership of the shared model/vllm caches
 #   draft-cache-init  one-shot: pull the pinned all-NVFP4 DFlash2 drafter
-#   server            GPU vLLM server (text + CPU-produced multimodal embeds)
-#   vision            OPTIONAL CPU vision sidecar (profile "vision")
+#   server            GPU vLLM server (optimized text-only path)
 #
-# Golden path (vision on):  docker compose --profile vision up -d
-# Golden path (text only):  docker compose up -d
+# Golden path:  docker compose up -d
 #
 # The server downloads the pinned target checkpoint into the hf-cache volume on
-# first boot (~20.6 GB). With the vision profile, the sidecar additionally loads
-# the 460M-param vision tower on CPU and proxies image requests to the server.
+# first boot (~20.6 GB). Vision is intentionally disabled in this release: the
+# multimodal model path disables a fused QK-norm/RoPE/gate decode kernel and
+# materially reduces text throughput even when no image request is active.
 
 name: qwen38-dflash2
 
@@ -98,9 +97,7 @@ services:
       - qwen3_coder
       - --chat-template
       - /opt/vllm-release/chat-template.jinja
-      - --enable-mm-embeds
-      - --limit-mm-per-prompt
-      - '{"image":0,"video":0}'
+      - --language-model-only
       - --kv-cache-dtype
       - nvfp4
       - --kv-cache-memory-bytes
@@ -128,42 +125,6 @@ services:
       interval: 10s
       timeout: 8s
       retries: 360
-      start_period: 30s
-
-  vision:
-    image: ${IMAGE}
-    container_name: qwen38-dflash2-vision
-    restart: unless-stopped
-    profiles: ["vision"]
-    cpus: "4.0"
-    mem_limit: "6g"
-    pids_limit: 256
-    depends_on:
-      server:
-        condition: service_healthy
-    entrypoint: ["python3", "/opt/vllm-release/sidecar.py"]
-    command: ["8016"]
-    ports:
-      - "${BIND_ADDRESS}:${VISION_PORT}:8016"
-    environment:
-      HF_HOME: /home/vllm/.cache/huggingface
-      HF_TOKEN: ${HF_TOKEN:-}
-      SIDECAR_MODEL: ${MODEL_ID}
-      SIDECAR_MODEL_REVISION: ${MODEL_REVISION}
-      SIDECAR_UPSTREAM: http://server:8000
-      OMP_NUM_THREADS: "4"
-      MKL_NUM_THREADS: "4"
-      OPENBLAS_NUM_THREADS: "4"
-      TORCH_NUM_THREADS: "4"
-      TORCH_NUM_INTEROP_THREADS: "1"
-    volumes:
-      - hf-cache:/home/vllm/.cache/huggingface
-      - ./sidecar.py:/opt/vllm-release/sidecar.py:ro
-    healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8016/health', timeout=5)"]
-      interval: 10s
-      timeout: 8s
-      retries: 120
       start_period: 30s
 
 volumes:

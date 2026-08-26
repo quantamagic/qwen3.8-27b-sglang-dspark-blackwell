@@ -3,7 +3,6 @@
 #
 #   ./verify.sh --smoke   # health, model routing, deterministic canary
 #   ./verify.sh --full    # smoke + long-decode determinism + NIAH + tools
-#                         # (+ vision gate when the sidecar is up)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,7 +14,6 @@ source .env
 set +a
 
 base="http://${BIND_ADDRESS}:${VLLM_PORT}"
-vision="http://${BIND_ADDRESS}:${VISION_PORT}"
 
 # --- smoke: health + model routing + deterministic canary -------------------
 curl -fsS "$base/health" >/dev/null
@@ -38,7 +36,7 @@ elif [[ "${1:-}" != "--full" && -n "${1:-}" ]]; then
   exit 2
 fi
 
-# --- full: long-decode determinism + NIAH + tools + optional vision ---------
+# --- full: long-decode determinism + NIAH + tools ---------------------------
 echo "Running full gate suite..."
 
 # 1) Long-decode determinism: two identical 2048-token decodes must match.
@@ -98,10 +96,5 @@ PY
 python3 -c 'import json,sys; p=json.loads(sys.argv[1]); tc=p["choices"][0]["message"].get("tool_calls"); sys.exit(0 if tc and tc[0]["function"]["name"]=="get_weather" else 1)' "$tool" \
   || { echo "FAIL: tool calling (no valid tool_call)" >&2; exit 1; }
 echo "PASS: tool calling (get_weather invoked)"
-
-# 4) Vision gate (only when the sidecar is up).
-if curl -fsS "$vision/health" >/dev/null 2>&1; then
-  echo "Vision sidecar up; skipping in-band vision gate (run bench/vision_gate.py for the full matrix)."
-fi
 
 echo "All full gates passed."

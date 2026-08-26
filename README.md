@@ -3,7 +3,7 @@
 Community vLLM build for a single Blackwell GPU: ModelOpt **NVFP4 target
 weights**, **NVFP4 DFlash2 draft weights**, **NVFP4 KV cache**, and **DFlash2
 K=7 block-diffusion speculative decoding** — 262K context, four concurrent
-streams, tool calling, and an optional CPU-offloaded vision sidecar.
+streams, tool calling, and an optimized language-only serving path.
 
 > This is not an official vLLM or NVIDIA image. It is a pinned community
 > overlay on vLLM v0.27.1, validated on an RTX 5090 (SM120, 32 GB). The SM121
@@ -24,9 +24,15 @@ streams, tool calling, and an optional CPU-offloaded vision sidecar.
 - **Capacity-first profile.** Explicit 8 GiB NVFP4 KV pin → 325,139-token
   pool at 262K max context, BF16 GDN/SSM state, prefix caching, priority
   scheduling, chunked prefill.
-- **Optional CPU vision sidecar.** The GPU server stays text +
-  embedding-capable; a 4-CPU / 6 GB sidecar runs the 460M-param vision tower
-  and proxies image requests. Off by default (`--profile vision`).
+- **Fast text path is mandatory.** Compose passes `--language-model-only`,
+  which enables vLLM's fused QK-norm + RoPE + gate path for Qwen3.5. The
+  previous embedding-capable configuration cut measured text decode roughly
+  in half even when the CPU vision sidecar was idle.
+
+> **Vision status:** temporarily disabled as of
+> `v0.27.1-sm12x-dflash2.2`. The sidecar source remains for development, but
+> it is not wired into Compose or supported by `start.sh`. See
+> [Why vision is disabled](#why-vision-is-disabled).
 
 ## Deploy in two commands
 
@@ -47,12 +53,6 @@ pulls the pinned runtime; downloads the exact pinned target and draft
 checkpoints into Docker named volumes; starts vLLM; waits for health; and
 sends a real chat completion (deterministic canary: `19×23 → 437`).
 
-To include the optional CPU vision sidecar:
-
-```bash
-./start.sh --vision
-```
-
 On hosts with more than one GPU, set `GPU_DEVICE` in `.env` to the
 Blackwell card's index or UUID (default `0`). `start.sh` probes only that
 device and the compose stack exposes only that device to the container
@@ -62,7 +62,6 @@ second card cannot interfere with device selection or enumeration.
 Endpoints after startup:
 
 - OpenAI-compatible vLLM API: `http://127.0.0.1:18089/v1`
-- Vision-capable proxy (with `--vision`): `http://127.0.0.1:8016/v1`
 - Served model: `qwen3.8-27b-nvfp4-dflash2`
 
 First startup is dominated by the two downloads and CUDA/FlashInfer warmup.
@@ -114,10 +113,38 @@ not redistributed in the runtime image.
 | Scheduling | priority + prefix caching + chunked prefill, long-prefill threshold 2048 |
 | Sampling | temperature 0.6 override, thinking enabled (medium effort) |
 | Tooling | `--enable-auto-tool-choice --tool-call-parser qwen3_coder` |
+| Serving mode | `--language-model-only` (vision and multimodal embeddings disabled) |
 
 Measured on the RTX 5090 (SM120): c1 ≈ 108–151 tok/s, c4 aggregate median
 ≈ 349 tok/s (2.31x vs. c1), ~61% draft acceptance at K7, zero restarts,
 zero OOM. See [EVIDENCE.md](EVIDENCE.md).
+
+## Why vision is disabled
+
+The CPU sidecar itself was idle during text requests and did not consume
+meaningful CPU. The slowdown came from keeping the GPU server in multimodal /
+embedding-capable mode. In this pinned vLLM build, Qwen3.5 enables its fused
+QK-norm + RoPE + gate decoder kernel only when `language_model_only=true`.
+`--limit-mm-per-prompt '{"image":0,"video":0}'` skips the GPU vision tower,
+but it does **not** select that fused text decoder path.
+
+On the same RTX 5090 release image and benchmark prompts, switching to
+`--language-model-only` changed narrative decode from 61.6 to 116.2 tok/s and
+code decode from 105.7 to 202.4 tok/s. GPU allocation also fell from about
+32,102 MiB to 30,944 MiB. Vision will remain disabled until it can use a
+separate request/graph path without penalizing ordinary text requests.
+
+### Upgrade from `.1`
+
+```bash
+git pull --ff-only
+docker compose down --remove-orphans
+./start.sh
+```
+
+The runtime image digest and model artifacts are unchanged; this is a serving
+configuration correction. `--remove-orphans` removes an old vision-sidecar
+container created by the `.1` Compose profile.
 
 ## SM121 (DGX Spark / GB10)
 
@@ -131,14 +158,14 @@ SPARK=1 ./build.sh          # native build on the Spark (fast path)
 The SM121 build is **not yet natively validated** (no SM121 hardware was
 available at release time); the SM120 artifact is the validated release.
 The multi-arch tag will not be promoted until the SM121 build passes the
-full correctness matrix (greedy determinism, NIAH, tools, vision, c4 soak)
+full correctness matrix (greedy determinism, NIAH, tools, c4 soak)
 natively on a GB10.
 
 ## Rollback / coexistence
 
 This release coexists with the MTP release (`vllm-sm120-nvfp4-mtp`) as a
 blue/green alternative: separate repo, image, Compose project
-(`qwen38-dflash2`), container names, ports (18089/8016 vs. 18079/8006), and
+(`qwen38-dflash2`), container names, ports (18089 vs. 18079/8006), and
 model cache volumes. Only one 27B GPU server runs at a time on a single
 32 GiB card. Rollback: `./stop.sh`, then start the unchanged pinned MTP
 project.

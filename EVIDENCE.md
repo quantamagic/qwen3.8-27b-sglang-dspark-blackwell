@@ -38,7 +38,9 @@ itself NVFP4 (W4A16, group-16, compressed-tensors `nvfp4-pack-quantized`).
 | NIAH | 184,024-token needle recovered exactly | production promotion |
 | Greedy determinism | PASS (canary `19×23 → 437`) | production promotion |
 | Tools / structured output | 10/10, JSON-schema PASS | 2026-08-21 acceptance gates |
-| Vision (CPU sidecar) | short/long probes PASS; multi-image 6/6 | 2026-08-21 gates |
+| Language-only narrative decode | 116.15 tok/s mean, CV 1.6% (5 runs) | 2026-08-25 Club 3090 `bench.sh`, prefill disabled |
+| Language-only code decode | 202.43 tok/s mean, CV 11.2% (5 runs) | same |
+| Vision-capable control | narrative 61.6, code 105.7 tok/s | same image/config except multimodal serving mode |
 | Restarts / OOM | 0 / 0 | production promotion |
 
 ## Gate results — release candidate
@@ -48,8 +50,22 @@ itself NVFP4 (W4A16, group-16, compressed-tensors `nvfp4-pack-quantized`).
 - Greedy determinism PASS; canary 437.
 - NIAH PASS at 30,683 and 184,024 prompt tokens.
 - Tools 10/10; JSON-schema structured output PASS.
-- Vision short/long probes PASS.
+- Language-only startup PASS with no multimodal warmup; Compose explicitly
+  passes `--language-model-only`.
 - NVFP4 target/draft cache and FlashInfer XQA confirmed in live logs.
+
+## Vision disposition
+
+The historical CPU-sidecar correctness gates passed, but that design kept the
+GPU server embedding-capable. The CPU process was idle during text-only tests;
+the regression was caused by the GPU model path. In this pinned vLLM source,
+Qwen3.5's `use_fused_qk_norm_rope_gate` is enabled only when
+`multimodal_config.language_model_only` is true. Limiting image/video counts to
+zero prunes the vision tower but does not enable the fused decoder path.
+
+Release `.2` therefore disables vision and multimodal embeddings. The sidecar
+and its historical gate remain source artifacts for development only and are
+not part of the supported Compose deployment.
 
 ## Rollback
 

@@ -139,7 +139,9 @@ services:
     restart: unless-stopped
     profiles: ["vision"]
     # Keep CPU vision work bounded so it cannot starve the GPU server or host.
-    cpus: "4.0"
+    # 8 cores measured 1.6x faster encode than 4 (memory-bandwidth-bound under
+    # WSL2, so sub-linear); mem/pid limits stay at the soft-lockup mitigation.
+    cpus: "8.0"
     mem_limit: "6g"
     pids_limit: 256
     depends_on:
@@ -155,10 +157,13 @@ services:
       SIDECAR_MODEL: ${MODEL_ID}
       SIDECAR_MODEL_REVISION: ${MODEL_REVISION}
       SIDECAR_UPSTREAM: http://server:8000
-      OMP_NUM_THREADS: "4"
-      MKL_NUM_THREADS: "4"
-      OPENBLAS_NUM_THREADS: "4"
-      TORCH_NUM_THREADS: "4"
+      # INT8 dynamic quantization of the ViT tower's Linear layers (default on;
+      # set SIDECAR_INT8=0 for the fp32 eager fallback). ~1.5x faster encode.
+      SIDECAR_INT8: ${SIDECAR_INT8:-1}
+      OMP_NUM_THREADS: "8"
+      MKL_NUM_THREADS: "8"
+      OPENBLAS_NUM_THREADS: "8"
+      TORCH_NUM_THREADS: "8"
       TORCH_NUM_INTEROP_THREADS: "1"
     volumes:
       - hf-cache:/home/vllm/.cache/huggingface

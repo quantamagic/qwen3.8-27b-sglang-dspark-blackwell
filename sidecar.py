@@ -19,11 +19,13 @@ import sys
 
 import httpx
 import torch
+import torch.nn as nn
 from fastapi import FastAPI, Request
 from fastapi.responses import Response, StreamingResponse
 from huggingface_hub import snapshot_download
 from PIL import Image
 from safetensors import safe_open
+from torch.ao.quantization import quantize_dynamic
 from transformers import AutoConfig, AutoProcessor
 
 MODEL = os.environ.get(
@@ -39,6 +41,11 @@ TORCH_NUM_THREADS = max(1, int(os.environ.get("TORCH_NUM_THREADS", "4")))
 TORCH_NUM_INTEROP_THREADS = max(
     1, int(os.environ.get("TORCH_NUM_INTEROP_THREADS", "1"))
 )
+# Opt-in INT8 dynamic quantization of the vision tower's Linear layers
+# (INT8 weights, fp32 activations). ~1.5-2x faster CPU encode; embedding
+# cosine similarity vs fp32 is ~0.90. Default on (set SIDECAR_INT8=0 to
+# fall back to fp32 eager).
+SIDECAR_INT8 = os.environ.get("SIDECAR_INT8", "1") == "1"
 
 torch.set_num_threads(TORCH_NUM_THREADS)
 torch.set_num_interop_threads(TORCH_NUM_INTEROP_THREADS)
@@ -72,6 +79,9 @@ class VisionEncoder:
         if missing or unexpected:
             raise RuntimeError(f"vision load mismatch: missing={missing[:4]} unexpected={unexpected[:4]}")
         self.model.eval()
+        if SIDECAR_INT8:
+            self.model = quantize_dynamic(self.model, {nn.Linear}, dtype=torch.qint8)
+            print("[sidecar] vision tower INT8-quantized (dynamic, Linear layers)")
         print(f"[sidecar] vision tower loaded on CPU: {sum(v.numel() for v in self.model.parameters())} params")
 
     @torch.no_grad()

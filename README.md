@@ -27,9 +27,9 @@ streams, tool calling, and an optional bounded CPU vision sidecar.
 - **Fused multimodal decode.** The `.3` incremental overlay extends the
   fused QK-norm + RoPE + gate Triton kernel to Qwen3.5's three-axis M-RoPE,
   preserving the fast decode path while `--enable-mm-embeds` is active.
-- **Optional bounded CPU vision.** `./start.sh --vision` enables the 4-CPU,
-  6-GB sidecar; ordinary text serving can use the same multimodal-capable
-  server without starting the sidecar.
+- **Optional bounded CPU vision.** `./start.sh --vision` enables the 8-CPU,
+  6-GB sidecar (INT8-quantized ViT tower by default); ordinary text serving
+  can use the same multimodal-capable server without starting the sidecar.
 
 > **Vision status:** restored as an optional supported profile in
 > `v0.27.1-sm12x-dflash2.3`. The SM120 fixture and CUDA kernel gate passed;

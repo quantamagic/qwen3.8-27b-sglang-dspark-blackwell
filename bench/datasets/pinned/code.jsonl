@@ -1,0 +1,6 @@
+{"id": "code-01", "max_completion_tokens": 1024, "messages": [{"content": "Implement an LRU cache in Python with O(1) get and put. Return only code.", "role": "user"}], "workload": "code"}
+{"id": "code-02", "max_completion_tokens": 1024, "messages": [{"content": "Write a TypeScript function that validates a webhook signature using HMAC-SHA256 and timing-safe comparison. Return only code.", "role": "user"}], "workload": "code"}
+{"id": "code-03", "max_completion_tokens": 1024, "messages": [{"content": "Implement a Go worker pool with context cancellation, bounded concurrency, and ordered result collection. Return only code.", "role": "user"}], "workload": "code"}
+{"id": "code-04", "max_completion_tokens": 1024, "messages": [{"content": "Write a Rust parser for a simple key=value configuration format, with useful error messages. Return only code.", "role": "user"}], "workload": "code"}
+{"id": "code-05", "max_completion_tokens": 1024, "messages": [{"content": "Implement a Python async retry helper with exponential backoff, jitter, and a retryable exception predicate. Return only code.", "role": "user"}], "workload": "code"}
+{"id": "code-06", "max_completion_tokens": 1024, "messages": [{"content": "Write a SQL migration and a PostgreSQL query for idempotent event ingestion using a unique event id. Return only code.", "role": "user"}], "workload": "code"}

@@ -1,0 +1,87 @@
+{
+  "endpoint": "http://127.0.0.1:18089",
+  "model": "qwen3.8-27b-nvfp4-dflash2",
+  "sampler": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0
+  },
+  "thinking": false,
+  "warmups": 3,
+  "rounds": 5,
+  "results": {
+    "c1_narrative": {
+      "concurrency": 1,
+      "rounds": 5,
+      "aggregate_tps_mean": 97.54494790661045,
+      "aggregate_tps_min": 91.4710853993815,
+      "aggregate_tps_max": 103.08514844536846,
+      "lane_tps_mean": 97.54494790661045,
+      "ttft_ms_mean": 121.23264920082875
+    },
+    "c1_code": {
+      "concurrency": 1,
+      "rounds": 5,
+      "aggregate_tps_mean": 172.84341684379984,
+      "aggregate_tps_min": 161.44127294415048,
+      "aggregate_tps_max": 180.29226138252832,
+      "lane_tps_mean": 172.84341684379984,
+      "ttft_ms_mean": 125.79807339934632
+    },
+    "c2_narrative": {
+      "concurrency": 2,
+      "rounds": 5,
+      "aggregate_tps_mean": 191.64157015786688,
+      "aggregate_tps_min": 184.73568701282636,
+      "aggregate_tps_max": 203.13794278070858,
+      "lane_tps_mean": 97.38659620774665,
+      "ttft_ms_mean": 318.4029307012679
+    },
+    "c2_code": {
+      "concurrency": 2,
+      "rounds": 5,
+      "aggregate_tps_mean": 329.77076325325794,
+      "aggregate_tps_min": 288.48401741495377,
+      "aggregate_tps_max": 394.755766301334,
+      "lane_tps_mean": 189.0051437099282,
+      "ttft_ms_mean": 328.75443570665084
+    },
+    "c3_narrative": {
+      "concurrency": 3,
+      "rounds": 5,
+      "aggregate_tps_mean": 278.38038312751814,
+      "aggregate_tps_min": 267.4922382441155,
+      "aggregate_tps_max": 294.6656162232793,
+      "lane_tps_mean": 95.46456830961755,
+      "ttft_ms_mean": 329.7876544626585
+    },
+    "c3_code": {
+      "concurrency": 3,
+      "rounds": 5,
+      "aggregate_tps_mean": 446.6679292475387,
+      "aggregate_tps_min": 387.2729256589767,
+      "aggregate_tps_max": 554.4428908827205,
+      "lane_tps_mean": 181.37318202512958,
+      "ttft_ms_mean": 321.94482373112504
+    },
+    "c4_narrative": {
+      "concurrency": 4,
+      "rounds": 5,
+      "aggregate_tps_mean": 343.4559354758512,
+      "aggregate_tps_min": 319.0803981154013,
+      "aggregate_tps_max": 363.056869933628,
+      "lane_tps_mean": 90.64286395561454,
+      "ttft_ms_mean": 324.3090019459487
+    },
+    "c4_code": {
+      "concurrency": 4,
+      "rounds": 5,
+      "aggregate_tps_mean": 586.6283450473558,
+      "aggregate_tps_min": 547.9306008770924,
+      "aggregate_tps_max": 608.2736950635389,
+      "lane_tps_mean": 169.51327170389663,
+      "ttft_ms_mean": 353.2050990994321
+    }
+  }
+}

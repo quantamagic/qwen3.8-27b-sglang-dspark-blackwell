@@ -1,0 +1,40 @@
+{
+  "longbench_character_windows": {
+    "32k": [
+      80000,
+      160000
+    ],
+    "64k": [
+      160000,
+      300000
+    ]
+  },
+  "schema_version": 1,
+  "source_sha256": {
+    "ifeval": "67ffeee0fcb87c317c5b08a2de85557b4a7e96ada6178aa645b4954fe4b53d49",
+    "longbench_v2": "15d61c22d92c96900b3c4948b6aeea218d3214b676a65df48e7b8555604c7fe2",
+    "sharegpt": "35f0e213ce091ed9b9af2a1f0755e9d39f9ccec34ab281cd4ca60d70f6479ba4"
+  },
+  "workloads": {
+    "code.jsonl": {
+      "count": 6,
+      "sha256": "63643f556097f68d96e42d9858ad14c0e810eb4a4c148223e338ae550f23e1dc"
+    },
+    "ifeval.jsonl": {
+      "count": 541,
+      "sha256": "274bacc20dd25707333d4d48de19e708ec927fec7a09ecc3733c097fe66a561f"
+    },
+    "longbench_32k.jsonl": {
+      "count": 24,
+      "sha256": "6988ea4e8e8d25ad358b38d084c2b4fa3bb9d03e7963af5e7fc264d75ae2f5fc"
+    },
+    "longbench_64k.jsonl": {
+      "count": 24,
+      "sha256": "363e67e40ff40bff1f9072313705733dd60e7bb753aae6f6adf94c59563a9644"
+    },
+    "sharegpt.jsonl": {
+      "count": 48,
+      "sha256": "cf3fcd23966fd9623cc2b98371b66dde52a9bba3f36f053348b5a3267e75b908"
+    }
+  }
+}

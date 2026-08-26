@@ -1,0 +1,58 @@
+[
+ {
+  "c": 1,
+  "gens": 6,
+  "agg_tok_s": 167.8,
+  "per_stream_median": 168.6,
+  "per_stream_min": 144.0,
+  "tpot_ms_p50": 5.9,
+  "wall_s": 36.6,
+  "drafts": 7735,
+  "accepted": 4664,
+  "accept_rate": 0.603,
+  "mean_accept_len": 5.06,
+  "avg_draft_accept_pct": 58.0
+ },
+ {
+  "c": 2,
+  "gens": 6,
+  "agg_tok_s": 323.6,
+  "per_stream_median": 170.6,
+  "per_stream_min": 146.5,
+  "tpot_ms_p50": 5.9,
+  "wall_s": 19.0,
+  "drafts": 7175,
+  "accepted": 4070,
+  "accept_rate": 0.567,
+  "mean_accept_len": 4.82,
+  "avg_draft_accept_pct": 54.6
+ },
+ {
+  "c": 3,
+  "gens": 6,
+  "agg_tok_s": 459.9,
+  "per_stream_median": 159.7,
+  "per_stream_min": 152.0,
+  "tpot_ms_p50": 6.3,
+  "wall_s": 13.4,
+  "drafts": 10668,
+  "accepted": 6900,
+  "accept_rate": 0.647,
+  "mean_accept_len": 5.5,
+  "avg_draft_accept_pct": 64.2
+ },
+ {
+  "c": 4,
+  "gens": 6,
+  "agg_tok_s": 519.5,
+  "per_stream_median": 183.6,
+  "per_stream_min": 164.9,
+  "tpot_ms_p50": 5.4,
+  "wall_s": 11.8,
+  "drafts": 6937,
+  "accepted": 4172,
+  "accept_rate": 0.601,
+  "mean_accept_len": 5.21,
+  "avg_draft_accept_pct": 60.1
+ }
+]

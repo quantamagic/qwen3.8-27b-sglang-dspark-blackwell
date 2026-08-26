@@ -102,7 +102,7 @@ afternoon runs; expect the higher numbers on a cold GPU.
 ## Provenance — how to verify these numbers
 
 The TLDR table is a summary; the raw evidence is committed under
-`bench/results/2026-08-26-5090-bench/`:
+`bench/evidence-2026-08-26-5090-bench/`:
 
 - `concurrency-c1-c4.json` — raw c1–c4 concurrent-decode JSON (source of the
   decode table; per-lane + aggregate + TTFT, 5 rounds × 3 warmups).

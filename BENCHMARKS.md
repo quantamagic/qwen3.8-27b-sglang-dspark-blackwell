@@ -98,3 +98,35 @@ All GPU numbers are thermally sensitive. A cool morning run measures
 ~15–20% higher than a sustained afternoon run (GPU downclocks from
 2,872 MHz to ~2,857 MHz at 58–60 °C idle). The numbers above are from
 afternoon runs; expect the higher numbers on a cold GPU.
+
+## Provenance — how to verify these numbers
+
+The TLDR table is a summary; the raw evidence is committed under
+`bench/results/2026-08-26-5090-bench/`:
+
+- `concurrency-c1-c4.json` — raw c1–c4 concurrent-decode JSON (source of the
+  decode table; per-lane + aggregate + TTFT, 5 rounds × 3 warmups).
+- `full-bench-summary.md` — the full `bench.sh` summary blocks (narrative,
+  code, prefill-10K, prefill-90K) with means/std/CV.
+
+To re-run and confirm:
+
+```bash
+# 1. Pull the pinned image + models, start the stack
+./start.sh --vision
+
+# 2. Run the in-tree reproducible bench tools (see "How to reproduce")
+python3 bench/publication_bench.py --url http://127.0.0.1:18089
+
+# 3. Check the release artifacts match the pinned checksums
+sha256sum --check SHA256SUMS
+
+# 4. Run the correctness gates (determinism, NIAH, tools, vision fixture)
+./verify.sh --full
+./verify.sh --vision
+```
+
+The `release-integrity` GitHub workflow (`.github/workflows/integrity.yml`)
+runs `./scripts/check-release.sh` on every push, which re-verifies
+`SHA256SUMS` and patch applicability — so a tampered or drifted artifact
+fails CI.

@@ -176,6 +176,21 @@ will warm the new Triton kernel variants.
 Run `./verify.sh --vision` for the exact two-image fixture and concurrency
 gate after the sidecar is healthy.
 
+## Verify this release
+
+Every artifact is pinned by immutable digest/revision, not floating tag, and
+the `release-integrity` workflow re-checks them on every push:
+
+```bash
+sha256sum --check SHA256SUMS   # patches, Dockerfile, template, sidecar, bench gates
+./verify.sh --full             # determinism, NIAH, tools
+./verify.sh --vision           # exact two-image fixture + vision concurrency gate
+```
+
+Expected 5090 decode/prefill/vision numbers, with the raw evidence and a
+reproduce path, are in [BENCHMARKS.md](BENCHMARKS.md); the full measurement
+record is in [EVIDENCE.md](EVIDENCE.md).
+
 ## SM121 (DGX Spark / GB10)
 
 The same source + patch contract builds for `linux/arm64` with

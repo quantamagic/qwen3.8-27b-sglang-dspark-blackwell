@@ -3,6 +3,7 @@
 #
 #   ./verify.sh --smoke   # health, model routing, deterministic canary
 #   ./verify.sh --full    # smoke + long-decode determinism + NIAH + tools
+#   ./verify.sh --vision  # exact two-image fixture and bounded vision gate
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -30,6 +31,12 @@ print(f"PASS: health, model routing, and deterministic canary (437)")
 PY
 
 if [[ "${1:-}" == "--smoke" ]]; then
+  exit 0
+elif [[ "${1:-}" == "--vision" ]]; then
+  echo "Running exact vision fixture and concurrency gate..."
+  BASE_URL="http://${BIND_ADDRESS}:${VISION_PORT}" \
+    MODEL="${SERVED_MODEL_NAME}" \
+    python3 bench/vision_gate.py
   exit 0
 elif [[ "${1:-}" != "--full" && -n "${1:-}" ]]; then
   echo "usage: ./verify.sh [--smoke|--full]" >&2

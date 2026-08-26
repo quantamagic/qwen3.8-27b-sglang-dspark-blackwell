@@ -6,6 +6,44 @@ GBrain `vllm/2026-08-21-qwen38-dflash2-nvfp4-release-plan`,
 `sessions/2026-08-24-dflash2-drafter-parity-radixark`,
 `bench/2026-08-25-coding-benchmark-c1-vs-c4-dflash2-k7`.
 
+## `.3` fused M-RoPE candidate (SM120)
+
+The `.2` regression was reproduced with the CPU sidecar idle: enabling the
+multimodal/embedding-capable GPU path disabled the fused QK-norm + RoPE + gate
+decoder path. The incremental `.3` patch extends that existing Triton kernel
+for Qwen3.5's T/H/W M-RoPE (contiguous and interleaved sections), keeping the
+base image and all native CUDA artifacts unchanged. The minimal Docker layer
+contains the two production Python files and is recorded as 12,600 bytes;
+Triton JIT compiles the new variants on first use into the persisted cache.
+
+The reviewed CUDA correctness matrix passed **9/9** cases. The exact vision
+fixture passed **2/2** images (both color/shape/label checks). These are SM120
+(RTX 5090) results; SM121 (DGX Spark/GB10) remains unvalidated.
+
+### Matched decode matrix
+
+Narrative/code tok/s, measured with the same DFlash2 K7 profile and workload
+shape. The candidate keeps the multimodal server configuration active; the
+control uses `.2`'s `--language-model-only` path.
+
+| Concurrency | `.3` candidate narrative / code | `.2` language-only narrative / code |
+|---:|---:|---:|
+| c1 | 107.72 / 206.63 | 106.26 / 192.76 |
+| c2 | 215.87 / 352.09 | 213.30 / 370.32 |
+| c3 | 307.44 / 453.91 | 316.07 / 455.56 |
+| c4 | 403.77 / 616.33 | 405.54 / 592.75 |
+
+The prior multimodal control was 61.6 narrative / 105.7 code tok/s, versus
+116.2 / 202.4 in language-only mode. The candidate removes that roughly
+50-percent decode cliff without requiring a native rebuild.
+
+### Upstream duplicate-work check
+
+The implementation area is already covered by open upstream efforts
+[vLLM #49744](https://github.com/vllm-project/vllm/pull/49744) and
+[vLLM #43056](https://github.com/vllm-project/vllm/pull/43056). The release
+keeps this as a narrow pinned-vLLM backport and does not open a duplicate PR.
+
 ## What makes this build unique
 
 No public container, repo, or blog ships a working **NVFP4 weights + NVFP4
@@ -63,9 +101,11 @@ Qwen3.5's `use_fused_qk_norm_rope_gate` is enabled only when
 `multimodal_config.language_model_only` is true. Limiting image/video counts to
 zero prunes the vision tower but does not enable the fused decoder path.
 
-Release `.2` therefore disables vision and multimodal embeddings. The sidecar
-and its historical gate remain source artifacts for development only and are
-not part of the supported Compose deployment.
+Release `.2` disabled vision and multimodal embeddings to protect decode
+throughput. Release `.3` restores the optional profile after the fused M-RoPE
+kernel extension: the GPU server stays on the multimodal-capable path, while
+the CPU sidecar remains bounded at 4 CPUs, 6 GB, and 256 processes. Start it
+with `./start.sh --vision` and run `./verify.sh --vision` for the exact fixture.
 
 ## Rollback
 

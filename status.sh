@@ -9,7 +9,7 @@ set -a
 source .env
 set +a
 
-docker compose -f compose.yaml ps
+docker compose -f compose.yaml --profile vision ps
 echo
 nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu --format=csv,noheader
 echo

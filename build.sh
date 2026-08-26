@@ -9,6 +9,7 @@
 # Prereqs: docker, git, ~15 GB disk for the tree, ~1 h build time.
 # Usage:   ./build.sh          # build only (SM120/x86_64)
 #          SPARK=1 ./build.sh  # SM121/aarch64 (DGX Spark / GB10)
+#          VISION_MROPE=1 ./build.sh  # full source rebuild with .3 patch
 #          ./build.sh --push   # build + tag + push to ghcr.io (needs GHCR_PAT)
 set -euo pipefail
 
@@ -18,6 +19,8 @@ VLLM_VERSION=v0.27.1
 VLLM_COMMIT=6e448d0ea9bf3d88d898b65449ca6dc2aec170ac
 PATCH="0001-v0271-sm12x-dflash2-nvfp4.patch"
 PATCH_SHA256=248adb629444f143975b28013bf29b6c5c65e04789f68aecf5915ea290f0773e
+VISION_PATCH="0002-qwen3-next-fused-mrope-vision.patch"
+VISION_PATCH_SHA256=82d1a05364dce5151a02b02aa42b9893a05975e45207cdca9c4d87d92c093799
 SOURCE_URL=https://github.com/seanyourhighness/vllm-sm12x-nvfp4-dflash2
 GHCR_OWNER="${GHCR_OWNER:-seanyourhighness}"
 TAG="v0271-dflash2-$(date +%Y%m%d)"
@@ -51,6 +54,16 @@ actual_patch_sha="$(sha256sum "$SCRIPT_DIR/$PATCH" | cut -d' ' -f1)"
 git -C "$WORK/vllm" config user.name  "${GIT_USER_NAME:-vllm-sm12x-dflash2-build}"
 git -C "$WORK/vllm" config user.email "${GIT_USER_EMAIL:-build@local}"
 git -C "$WORK/vllm" apply --index "$SCRIPT_DIR/$PATCH"
+
+if [[ "${VISION_MROPE:-0}" == "1" ]]; then
+  echo "==> applying optional fused M-RoPE vision overlay"
+  actual_vision_patch_sha="$(sha256sum "$SCRIPT_DIR/$VISION_PATCH" | cut -d' ' -f1)"
+  [[ "$actual_vision_patch_sha" == "$VISION_PATCH_SHA256" ]] || {
+    echo "vision patch checksum mismatch: expected $VISION_PATCH_SHA256, got $actual_vision_patch_sha" >&2
+    exit 1
+  }
+  git -C "$WORK/vllm" apply --index "$SCRIPT_DIR/$VISION_PATCH"
+fi
 
 echo "==> building image (official vLLM Dockerfile, CUDA 13.0.3, SM120/SM121)"
 # FlashInfer 0.6.16.post3 + PR #4346 (SM120 NVFP4 paged-prefill) is baked into

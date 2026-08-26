@@ -16,18 +16,24 @@ grep -Fq '      - ${MODEL_ID}' compose.yaml || true
 grep -Fq '      - ${MODEL_REVISION}' compose.yaml
 grep -Fq './chat-template.jinja:/opt/vllm-release/chat-template.jinja:ro' compose.yaml
 grep -Fq '      - /opt/vllm-release/chat-template.jinja' compose.yaml
-grep -Fq '      - --language-model-only' compose.yaml
-! grep -Fq -- '--enable-mm-embeds' compose.yaml
-! grep -Fq -- '--limit-mm-per-prompt' compose.yaml
-! grep -Eq '^  vision:' compose.yaml
-! grep -Fq -- '--vision' start.sh
+grep -Fq '      - --enable-mm-embeds' compose.yaml
+grep -Fq '      - --limit-mm-per-prompt' compose.yaml
+grep -Fq "      - '{\"image\":0,\"video\":0}'" compose.yaml
+grep -Eq '^  vision:' compose.yaml
+grep -Fq 'TRITON_CACHE_DIR: /home/vllm/.cache/vllm/triton' compose.yaml
+grep -Fq -- '--vision' start.sh
+grep -Fq 'VISION_PORT=8016' .env.example
+test -s 0002-qwen3-next-fused-mrope-vision.patch
+test -s Dockerfile.vision-mrope
 grep -Fq 'io.github.seanyourhighness.vllm.patch-sha256=' Dockerfile.release-metadata
+grep -Fq 'io.github.seanyourhighness.vllm.vision-mrope-patch-sha256=' Dockerfile.release-metadata
 grep -Fq 'io.github.seanyourhighness.vllm.draft-model=' Dockerfile.release-metadata
 grep -Fq 'io.github.seanyourhighness.vllm.chat-template-sha256=' Dockerfile.release-metadata
 
 if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
-  # Render the supported language-only deployment (no GPU needed to render).
+  # Render both supported profiles (no GPU needed to render).
   docker compose --env-file .env.example -f compose.yaml config --quiet
+  docker compose --env-file .env.example -f compose.yaml --profile vision config --quiet
 fi
 
 if [[ "${CHECK_PATCH_APPLY:-0}" == "1" ]]; then
@@ -35,7 +41,8 @@ if [[ "${CHECK_PATCH_APPLY:-0}" == "1" ]]; then
   trap 'rm -rf "$work"' EXIT
   git clone --filter=blob:none https://github.com/vllm-project/vllm.git "$work/vllm"
   git -C "$work/vllm" checkout --detach 6e448d0ea9bf3d88d898b65449ca6dc2aec170ac
-  git -C "$work/vllm" apply --check "$ROOT/0001-v0271-sm12x-dflash2-nvfp4.patch"
+  git -C "$work/vllm" apply "$ROOT/0001-v0271-sm12x-dflash2-nvfp4.patch"
+  git -C "$work/vllm" apply --check "$ROOT/0002-qwen3-next-fused-mrope-vision.patch"
 fi
 
 echo "release integrity: PASS"

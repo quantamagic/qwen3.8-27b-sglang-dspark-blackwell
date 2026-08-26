@@ -11,7 +11,7 @@ set -a
 source .env
 set +a
 
-docker compose -f compose.yaml down --remove-orphans
+docker compose -f compose.yaml --profile vision down --remove-orphans
 if [[ "${1:-}" == "--purge-cache" ]]; then
   docker volume rm \
     vllm-sm12x-qwen38-dflash2-model-cache \

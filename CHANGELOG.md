@@ -1,5 +1,26 @@
 # Changelog — vllm-sm12x-nvfp4-dflash2
 
+## v0.27.1-sm12x-dflash2.3 (2026-08-25)
+
+Optional vision restored with the narrow fused M-RoPE backport; the `.2` base
+image and model artifacts remain unchanged.
+
+- Add incremental `0002-qwen3-next-fused-mrope-vision.patch` containing the
+  reviewed two production Python changes and targeted CUDA correctness test.
+  The minimal Docker overlay is recorded as a two-file, 12,600-byte layer;
+  no native CUDA rebuild is required because Triton JIT-compiles the new
+  variants and persists them in `TRITON_CACHE_DIR`.
+- Restore `--enable-mm-embeds` with zero image/video limits and the bounded
+  optional `vision` Compose profile (`4 CPU`, `6 GB`, `pids_limit=256`).
+- Restore `VISION_PORT`, `start.sh --vision`, profile-aware status/stop, and
+  `verify.sh --vision` for the exact fixture/concurrency gate.
+- Evidence: CUDA **9/9**, vision exact fixture **2/2**, and matched c1-c4
+  candidate/control measurements are recorded in `EVIDENCE.md`.
+- The candidate is validated on SM120 only; SM121 remains unvalidated.
+- Upstream duplicate efforts are [vLLM #49744](https://github.com/vllm-project/vllm/pull/49744)
+  and [vLLM #43056](https://github.com/vllm-project/vllm/pull/43056); no duplicate
+  PR is opened.
+
 ## v0.27.1-sm12x-dflash2.2 (2026-08-25)
 
 Text-throughput correction; runtime image and model pins are unchanged.

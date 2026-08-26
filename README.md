@@ -129,7 +129,9 @@ not redistributed in the runtime image.
 
 Measured on the RTX 5090 (SM120): c1 ≈ 108–151 tok/s, c4 aggregate median
 ≈ 349 tok/s (2.31x vs. c1), ~61% draft acceptance at K7, zero restarts,
-zero OOM. See [EVIDENCE.md](EVIDENCE.md).
+zero OOM. See [BENCHMARKS.md](BENCHMARKS.md) for the TLDR of expected 5090
+decode/prefill/vision numbers and [EVIDENCE.md](EVIDENCE.md) for the full
+measurement record.
 
 ## Why the M-RoPE overlay is required
 

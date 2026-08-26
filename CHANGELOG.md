@@ -1,5 +1,28 @@
 # Changelog — vllm-sm12x-nvfp4-dflash2
 
+## CPU vision sidecar improvements (2026-08-26)
+
+Host-side sidecar tuning; the `.3` runtime image and all model artifacts are
+unchanged. The sidecar is bind-mounted from the host (`./sidecar.py`), so these
+changes take effect on `docker compose up -d --force-recreate vision` with no
+rebuild.
+
+- **Core cap 4 → 8** (`compose.yaml` vision `cpus`, OMP/MKL/OPENBLAS/TORCH
+  threads). Measured ~1.5–1.6× faster encode (memory-bandwidth-bound under
+  WSL2, so sub-linear). 1 MP image 16.97 s → 10.66 s.
+- **INT8 ViT tower by default** (`SIDECAR_INT8=1`). Dynamic `qint8`
+  quantization of the 110 ViT Linear layers (weights INT8, activations fp32).
+  ~1.5× on top of the core cap; 1 MP image now ~6.8 s end-to-end (≈2.5× vs the
+  original 4-core eager baseline). Embeddings are ~0.90 cosine-similar to fp32
+  (0.897–0.906); disable with `SIDECAR_INT8=0` for the fp32 fallback.
+- `README.md`, `.env.example` updated to document the 8-CPU / INT8-default
+  sidecar.
+- **New `BENCHMARKS.md`** — TLDR of expected 5090 decode, prefill, and vision
+  sidecar numbers, with a reproduce section.
+
+Upgrade: `git pull --ff-only`, then
+`docker compose --profile vision up -d --force-recreate vision`.
+
 ## v0.27.1-sm12x-dflash2.3 (2026-08-25)
 
 Optional vision restored with the narrow fused M-RoPE backport; the `.2` base

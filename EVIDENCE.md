@@ -107,6 +107,42 @@ kernel extension: the GPU server stays on the multimodal-capable path, while
 the CPU sidecar remains bounded at 4 CPUs, 6 GB, and 256 processes. Start it
 with `./start.sh --vision` and run `./verify.sh --vision` for the exact fixture.
 
+## CPU vision sidecar speedups (2026-08-26, host-side, no image rebuild)
+
+The sidecar is bind-mounted from the host (`./sidecar.py` →
+`/opt/vllm-release/sidecar.py`), so both levers below are host-file changes
+that take effect on `docker compose --profile vision up -d --force-recreate
+vision`; the `.3` runtime image and model artifacts are unchanged.
+
+### Lever 1 — core cap 4 → 8
+
+Measured ~1.5–1.6× faster encode, not 2×: encode is partially
+memory-bandwidth-bound under WSL2, so scaling is sub-linear. 1 MP image
+(1280×960): 16.97 s → 10.66 s. `torch.compile` was probed and root-caused as
+a dead end (~0%: the ViT block loop graph-breaks and falls back to eager; the
+fixing flags crash on a data-dependent `torch.split`), so it was reverted.
+
+### Lever 2 — INT8 ViT tower (default on, `SIDECAR_INT8=1`)
+
+No ONNX/OpenVINO in the image, so `torch.ao.quantization.quantize_dynamic`
+quantizes the 110 ViT Linear layers (INT8 weights, fp32 activations):
+
+| Input | 8-core eager | 8-core INT8 | Speedup |
+|---|---:|---:|---:|
+| 640×480 | 2.88 s | 1.72 s | 1.67× |
+| 1280×960 | 10.66 s | 7.18 s | 1.48× |
+| 1920×1080 | 10.67 s | 6.84 s | 1.56× |
+| 2560×1440 | 10.52 s | 6.68 s | 1.58× |
+| text-only | 0.37 s | 0.40 s | ~1.0× |
+
+**Accuracy cost:** pooler-embedding cosine similarity vs fp32 ≈ 0.90
+(0.906 noise / 0.897 structured / 0.906 solid) — real but moderate; opt-out
+via `SIDECAR_INT8=0`. End-to-end 1 MP image: ~16.9 s (original 4-core eager)
+→ ~6.8 s (current 8-core INT8) ≈ 2.5×.
+
+Known follow-up: `quantize_dynamic` is deprecated in torch 2.13; migrate to
+`torchao.quantization.quantize_` on the next torch bump.
+
 ## Rollback
 
 Stop the DFlash2 Compose project (`./stop.sh`) and start the unchanged

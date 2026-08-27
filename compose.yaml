@@ -32,7 +32,7 @@ services:
     entrypoint: ["sh", "-c"]
     # One-shot: pull the pinned all-NVFP4 DFlash2 drafter into the shared
     # draft-cache volume (idempotent: huggingface-cli skips existing files).
-    command: ["huggingface-cli download ${DRAFT_ID} --revision ${DRAFT_REVISION} --local-dir /models/draft && chown -R 2000:0 /models/draft"]
+    command: ["hf download ${DRAFT_ID} --revision ${DRAFT_REVISION} --local-dir /models/draft && chown -R 2000:0 /models/draft"]
     restart: "no"
     volumes:
       - draft-cache:/models/draft
@@ -51,7 +51,7 @@ services:
       draft-cache-init:
         condition: service_completed_successfully
     ports:
-      - "${BIND_ADDRESS}:${VLLM_PORT}:8000"
+      - "0.0.0.0:${VLLM_PORT}:8000"
     environment:
       HF_HOME: /home/vllm/.cache/huggingface
       HF_TOKEN: ${HF_TOKEN:-}

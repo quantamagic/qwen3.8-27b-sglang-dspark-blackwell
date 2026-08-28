@@ -1,14 +1,14 @@
 """CPU vision sidecar for vLLM --enable-mm-embeds.
 
-Proxy: :8006 -> vLLM :18079. Rewrites image_url content parts into
+Default proxy: :8016 -> vLLM :18089. Rewrites image_url content parts into
 image_embeds parts computed by the checkpoint's vision tower on CPU.
 
 Env:
   SIDECAR_MODEL           local path or Hugging Face model ID
   SIDECAR_MODEL_REVISION  immutable Hugging Face revision
-  SIDECAR_UPSTREAM   vLLM base URL (default http://127.0.0.1:18079)
+  SIDECAR_UPSTREAM   vLLM base URL (default http://127.0.0.1:18089)
 
-Run:  python sidecar.py 8006
+Run:  python sidecar.py 8016
 """
 import base64
 import asyncio
@@ -34,7 +34,7 @@ MODEL = os.environ.get(
 MODEL_REVISION = os.environ.get(
     "SIDECAR_MODEL_REVISION", "69274a0d8dff5dd35bcee8290612f71e03b6e981"
 )
-UPSTREAM = os.environ.get("SIDECAR_UPSTREAM", "http://127.0.0.1:18079")
+UPSTREAM = os.environ.get("SIDECAR_UPSTREAM", "http://127.0.0.1:18089")
 MAX_PIXELS = 1280 * 28 * 28  # cap ~1.28 MP like the Qwen3-VL default
 MAX_IMAGE_BYTES = 25 * 1024 * 1024
 TORCH_NUM_THREADS = max(1, int(os.environ.get("TORCH_NUM_THREADS", "4")))
@@ -222,5 +222,5 @@ async def discovery_proxy(path: str, req: Request) -> Response:
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8006
+    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8016
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")

@@ -52,6 +52,16 @@ torch.set_num_interop_threads(TORCH_NUM_INTEROP_THREADS)
 
 app = FastAPI()
 
+# Allow browser clients on any origin (localhost dev UIs, LAN tools, etc.).
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 class VisionEncoder:
     def __init__(self) -> None:

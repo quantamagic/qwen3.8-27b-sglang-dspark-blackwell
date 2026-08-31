@@ -18,6 +18,17 @@ set -a
 source .env
 set +a
 
+# These values are interpolated into JSON / integer CLI arguments in
+# compose.yaml. Reject placeholder or malformed values before pulling images or
+# starting a restart loop that can only surface an opaque argparse error.
+for numeric_setting in NUM_SPECULATIVE_TOKENS MAX_NUM_BATCHED_TOKENS; do
+  numeric_value="${!numeric_setting:-}"
+  if [[ ! "$numeric_value" =~ ^[1-9][0-9]*$ ]]; then
+    echo "error: $numeric_setting must be a positive integer in .env; found '$numeric_value'" >&2
+    exit 2
+  fi
+done
+
 for cmd in docker nvidia-smi curl python3; do
   command -v "$cmd" >/dev/null 2>&1 || { echo "error: required command not found: $cmd" >&2; exit 1; }
 done

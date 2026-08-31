@@ -1,9 +1,10 @@
-# vLLM All-NVFP4 DFlash2 for Blackwell (SM120 / SM121)
+# vLLM All-NVFP4 DFlash2 for Blackwell (SM120 / SM121) + Optional Vision Sidecar
 
 Community vLLM build for a single Blackwell GPU: ModelOpt **NVFP4 target
 weights**, **NVFP4 DFlash2 draft weights**, **NVFP4 KV cache**, and **DFlash2
 K=7 block-diffusion speculative decoding** — 262K context, four concurrent
-streams, tool calling, and an optional bounded CPU vision sidecar.
+streams, tool calling, and an optional bounded CPU vision sidecar that turns
+images into embeddings for the vLLM server.
 
 > This is not an official vLLM or NVIDIA image. It is a pinned community
 > overlay on vLLM v0.27.1, validated on an RTX 5090 (SM120, 32 GB). The SM121

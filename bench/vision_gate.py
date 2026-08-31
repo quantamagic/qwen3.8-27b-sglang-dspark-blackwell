@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Multi-image + vision concurrency gates against :18079.
+"""Multi-image + vision concurrency gates against the vision sidecar (:8016 by default).
 
 Test 1: TWO images in ONE request -> must read both (color/shape/label).
 Test 2: concurrency sweep c=1/2/4/8 with single-image requests ->
